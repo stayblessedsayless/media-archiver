@@ -1,0 +1,39 @@
+name: media-archiver-build
+version: 0.1.0
+
+tasks:
+  - id: setup-env
+    run: |
+      powershell -Command "Set-ExecutionPolicy Bypass -Scope Process -Force"
+      winget install --exact --silent Python.Python.3 --version 3.10.9
+      winget install --exact --silent Gyan.FFmpeg --scope machine
+      pip install --upgrade pip setuptools wheel
+      pip install spotdl yt-dlp librosa mutagen soundfile pyinstaller
+
+  - id: fetch-src
+    run: |
+      git clone https://github.com/stayblessed/media-archiver.git src
+      cd src
+
+  - id: smoke-test
+    dir: src
+    run: |
+      python - << PY
+      import importlib; importlib.import_module('tkinter')
+      print('Tkinter OK')
+      PY
+
+  - id: build
+    dir: src
+    run: |
+      pyinstaller --onefile --windowed main.py
+
+  - id: bundle
+    dir: src
+    run: |
+      mkdir %MANUS_OUTPUT%\release
+      copy dist\main.exe %MANUS_OUTPUT%\release\spotify-archiver.exe
+
+outputs:
+  files:
+    - release/spotify-archiver.exe
